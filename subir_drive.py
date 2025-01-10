@@ -20,17 +20,19 @@ def get_creds():
     service = create_service(CLIENT_SECRET_FILE, API_NAME, API_VERSION,SCOPES )
     return service
 
-def get_sheet_trabajador(service, SHEET_ID,values):
+def get_sheet_trabajador(service, SHEET_ID, headers, values):
     print(SHEET_ID)
-    RANGE = "Datos!A2"
-    output = []
-    try:
+    RANGE = "Datos!A1"
+    data = [headers] + values
 
+    body = { 'values': data}
+
+    try:
         sheet = service.spreadsheets()
         result = sheet.values().update(spreadsheetId=SHEET_ID,
                                     range=RANGE,
                                     valueInputOption='USER_ENTERED',
-                                    body={'values':values}).execute()
+                                    body=body).execute()
         print(result)
     
     except Exception as e:
@@ -44,7 +46,12 @@ def connect_bd():
     return mssql_engine
 
 def leer_sql(conn):
-    stmt = "SELECT * FROM declaracion_mensual_f29"
+    stmt = """SELECT [Razon_social]
+      ,[Folio]
+      ,[Periodo]
+	  ,*
+        FROM [SII].[dbo].[declaracion_mensual_f29]
+    """
     df = pd.read_sql(stmt, conn)
     return df
 
@@ -53,6 +60,7 @@ if __name__ == '__main__':
     df = leer_sql(conn)
     print(df)
     values = df.values.tolist()
+    headers = df.columns.tolist()
     service = get_creds()
-    get_sheet_trabajador(service, SHEET_ID, values)
+    get_sheet_trabajador(service, SHEET_ID, headers, values)
     print("Done")
