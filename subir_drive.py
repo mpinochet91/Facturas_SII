@@ -49,16 +49,27 @@ def leer_sql(conn):
     stmt = """SELECT [Razon_social]
       ,[Folio]
       ,[Periodo]
+      ,[RUT]
 	  ,*
         FROM [SII].[dbo].[declaracion_mensual_f29]
     """
     df = pd.read_sql(stmt, conn)
     return df
 
+def quitar_columnas_duplicadas(df):
+    df = df.loc[:,~df.columns.duplicated()]
+    return df
+
+def quitar_duplicados(df):
+    df = df.drop_duplicates()
+    return df
+
 if __name__ == '__main__':
     conn = connect_bd()
     df = leer_sql(conn)
-    print(df)
+    df = quitar_columnas_duplicadas(df)
+    df = df.drop_duplicates()
+    print(df.columns)
     values = df.values.tolist()
     headers = df.columns.tolist()
     service = get_creds()
