@@ -60,18 +60,23 @@ def quitar_columnas_duplicadas(df):
     df = df.loc[:,~df.columns.duplicated()]
     return df
 
-def quitar_duplicados(df):
-    df = df.drop_duplicates()
-    return df
+def clear_sheet(service, SHEET_ID, sheet_range):
+    try:
+        sheet = service.spreadsheets()
+        request = sheet.values().clear(spreadsheetId=SHEET_ID, range=sheet_range)
+        response = request.execute()
+        print(f"Hoja limpiada: {response}")
+    except Exception as e:
+        print(f"Error al limpiar la hoja: {e}")
 
 if __name__ == '__main__':
     conn = connect_bd()
     df = leer_sql(conn)
     df = quitar_columnas_duplicadas(df)
     df = df.drop_duplicates()
-    print(df.columns)
     values = df.values.tolist()
     headers = df.columns.tolist()
     service = get_creds()
+    clear_sheet(service, SHEET_ID, 'Datos!A1:AL')
     get_sheet_trabajador(service, SHEET_ID, headers, values)
     print("Done")
